@@ -1,0 +1,30 @@
+[project]
+name = "email-ingestion"
+version = "0.1.0"
+description = "Windows-local Outlook email ingestion pipeline via win32com"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pywin32>=306",
+  "SQLAlchemy>=2.0",
+  "python-docx>=1.1.0",
+  "python-pptx>=0.6.23",
+  "pypdf>=4.0.0",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.0",
+  "icalendar>=5.0",
+  "python-dateutil>=2.8",
+]
+
+[project.optional-dependencies]
+msg = [
+  "extract-msg>=0.45.0",
+]
+
+[project.scripts]
+email-ingest = "email_ingestion.cli:main"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q"
+testpaths = ["tests"]
