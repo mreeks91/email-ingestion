@@ -14,10 +14,6 @@ dependencies = [
   "lxml>=5.0",
   "icalendar>=5.0",
   "python-dateutil>=2.8",
-]
-
-[project.optional-dependencies]
-msg = [
   "extract-msg>=0.45.0",
 ]
 

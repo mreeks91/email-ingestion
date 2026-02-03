@@ -109,7 +109,7 @@ class ExtractedArtifact(Base):
     payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     text: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_path: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    artifact_metadata: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class ProcessingEvent(Base):

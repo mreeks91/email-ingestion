@@ -71,6 +71,8 @@ class Repository:
         return payload["attachment_id"]
 
     def add_artifact(self, payload: dict) -> None:
+        if "metadata" in payload and "artifact_metadata" not in payload:
+            payload["artifact_metadata"] = payload.pop("metadata")
         stmt = sqlite_insert(ExtractedArtifact).values(**payload)
         stmt = stmt.on_conflict_do_nothing(index_elements=[ExtractedArtifact.artifact_id])
         self.session.execute(stmt)

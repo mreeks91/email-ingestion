@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
 import logging
 import uuid
 from email_ingestion.config import AppConfig
@@ -24,6 +23,7 @@ from email_ingestion.outlook.fetcher import OutlookFetcher, OutlookMessage, Outl
 from email_ingestion.pipeline.router import route_by_extension
 from email_ingestion.storage.cas import ContentAddressedStorage
 from email_ingestion.util.hashing import sha256_str
+from email_ingestion.util.json import json_dumps_safe, make_json_safe
 
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def make_artifact_id(
     if artifact.text:
         payload_hash += sha256_str(artifact.text)
     if artifact.payload is not None:
-        payload_hash += sha256_str(json.dumps(artifact.payload, sort_keys=True))
+        payload_hash += sha256_str(json_dumps_safe(artifact.payload, sort_keys=True))
     if artifact.file_path:
         payload_hash += sha256_str(artifact.file_path)
     return sha256_str(
@@ -256,21 +256,22 @@ def _store_calendar_artifact(repo: Repository, run_id: str, email_id: str, detai
         "organizer": details.organizer,
         "attendees": details.attendees,
     }
+    payload = make_json_safe(payload)
     artifact = Artifact(artifact_type="calendar", payload=payload)
     artifact_id = make_artifact_id(email_id, None, "calendar_meeting", artifact)
-    repo.add_artifact(
-        {
-            "artifact_id": artifact_id,
-            "email_id": email_id,
-            "attachment_id": None,
-            "head_name": "calendar_meeting",
-            "artifact_type": artifact.artifact_type,
-            "payload": artifact.payload,
-            "text": artifact.text,
-            "file_path": artifact.file_path,
-            "metadata": artifact.metadata,
-        }
-    )
+            repo.add_artifact(
+                {
+                    "artifact_id": artifact_id,
+                    "email_id": email_id,
+                    "attachment_id": None,
+                    "head_name": "calendar_meeting",
+                    "artifact_type": artifact.artifact_type,
+                    "payload": artifact.payload,
+                    "text": artifact.text,
+                    "file_path": artifact.file_path,
+                    "artifact_metadata": artifact.metadata,
+                }
+            )
     _add_event(repo, run_id, email_id, None, "calendar_meeting", "success", None)
 
 
@@ -278,6 +279,8 @@ def _run_head(repo: Repository, run_id: str, email_id: str, attachment_id: str |
     try:
         result = head.process(head_input)
         for artifact in result.artifacts:
+            safe_payload = make_json_safe(artifact.payload) if artifact.payload is not None else None
+            safe_metadata = make_json_safe(artifact.metadata) if artifact.metadata is not None else None
             artifact_id = make_artifact_id(email_id, attachment_id, head.name, artifact)
             repo.add_artifact(
                 {
@@ -286,10 +289,10 @@ def _run_head(repo: Repository, run_id: str, email_id: str, attachment_id: str |
                     "attachment_id": attachment_id,
                     "head_name": head.name,
                     "artifact_type": artifact.artifact_type,
-                    "payload": artifact.payload,
+                    "payload": safe_payload,
                     "text": artifact.text,
                     "file_path": artifact.file_path,
-                    "metadata": artifact.metadata,
+                    "artifact_metadata": safe_metadata,
                 }
             )
         _add_event(

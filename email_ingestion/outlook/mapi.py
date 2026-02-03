@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from typing import Iterable
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_namespace():
@@ -14,11 +17,33 @@ def get_namespace():
     return outlook.GetNamespace("MAPI")
 
 
+def _list_folder_names(folder) -> list[str]:
+    try:
+        return [f.Name for f in folder.Folders]
+    except Exception:
+        return []
+
+
 def resolve_shared_folder(namespace, mailbox: str, folder_path: str):
-    root = namespace.Folders.Item(mailbox)
+    try:
+        root = namespace.Folders.Item(mailbox)
+    except Exception as exc:
+        available = [f.Name for f in namespace.Folders]
+        raise ValueError(
+            f"Mailbox '{mailbox}' not found. Available top-level folders: {available}"
+        ) from exc
     folder = root
     if folder_path:
-        parts = [part for part in folder_path.split("/") if part]
+        normalized = folder_path.replace("\\", "/")
+        parts = [part for part in normalized.split("/") if part]
+        current_path = mailbox
         for part in parts:
-            folder = folder.Folders.Item(part)
+            try:
+                folder = folder.Folders.Item(part)
+            except Exception as exc:
+                available = _list_folder_names(folder)
+                raise ValueError(
+                    f"Folder '{part}' not found under '{current_path}'. Available: {available}"
+                ) from exc
+            current_path = f"{current_path}/{part}"
     return folder
