@@ -8,6 +8,7 @@ import uuid
 from email_ingestion.config import AppConfig
 from email_ingestion.db.repo import Repository
 from email_ingestion.db.session import Base, make_engine, make_session_factory
+from email_ingestion.db import models as _models  # noqa: F401 - ensure tables are registered
 from email_ingestion.heads.base import HeadInput, Artifact
 from email_ingestion.heads.email_body import EmailBodyHead
 from email_ingestion.heads.calendar_invite import CalendarInviteHead
@@ -84,7 +85,7 @@ def run_ingestion(
     storage.ensure_root()
 
     engine = make_engine(config.db_url)
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine, checkfirst=True)
     session_factory = make_session_factory(engine=engine)
 
     with session_factory() as session:
@@ -259,7 +260,7 @@ def _store_calendar_artifact(repo: Repository, run_id: str, email_id: str, detai
     payload = make_json_safe(payload)
     artifact = Artifact(artifact_type="calendar", payload=payload)
     artifact_id = make_artifact_id(email_id, None, "calendar_meeting", artifact)
-            repo.add_artifact(
+    repo.add_artifact(
                 {
                     "artifact_id": artifact_id,
                     "email_id": email_id,
