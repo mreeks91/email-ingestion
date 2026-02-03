@@ -16,6 +16,7 @@ def _build_config(base: AppConfig, args: argparse.Namespace) -> AppConfig:
         db_url=args.db_url or base.db_url,
         storage_root=args.storage_root or base.storage_root,
         log_level=args.log_level or base.log_level,
+        log_file=base.log_file,
         checkpoint_name=base.checkpoint_name,
     )
 
@@ -37,7 +38,7 @@ def main() -> None:
 
     args = parser.parse_args()
     config = _build_config(load_config(), args)
-    configure_logging(config.log_level)
+    configure_logging(config.log_level, config.log_file)
 
     if args.command == "run":
         since_dt = parse_datetime(args.since)

@@ -21,17 +21,12 @@ python -m venv .venv
 pip install -e .
 ```
 
-3. Optional: install `.msg` support:
-
-```powershell
-pip install -e ".[msg]"
-```
-
 **Configure**
 1. Copy `.env.example` to `.env` and update values as needed:
    - `EMAIL_INGEST_DB_URL` for database connection.
    - `EMAIL_INGEST_STORAGE_ROOT` for attachment storage.
    - `EMAIL_INGEST_LOG_LEVEL` for verbosity.
+   - `EMAIL_INGEST_LOG_FILE` for file-based logs (default `email_ingest.log`).
 
 2. Ensure the storage root directory exists or can be created.
 
@@ -71,6 +66,7 @@ Notes on polling:
 - Idempotency is enforced via deterministic IDs and upserts.
 
 **Troubleshooting**
+- If the terminal is noisy, check `EMAIL_INGEST_LOG_FILE` for detailed logs; the console only shows warnings/errors.
 - If Outlook security prompts appear, ensure the profile is trusted and configured by IT policy.
 - If no items are found, verify mailbox name and folder path.
-- If `.msg` parsing fails, confirm the optional `extract-msg` dependency is installed.
+- If `.msg` parsing fails, confirm `extract-msg` is installed in the same environment.
