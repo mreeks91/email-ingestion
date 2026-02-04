@@ -60,6 +60,25 @@ Notes on polling:
 - The first iteration can honor `--since` or `--since-checkpoint`.
 - Subsequent iterations always use the stored checkpoint to fetch only new items.
 
+**Export Text Dumps**
+Create text files that include subject, body text, and extracted attachment text:
+
+```powershell
+email-ingest export --output-dir "C:\email_dumps"
+```
+
+Limit output size per file (approximate):
+
+```powershell
+email-ingest export --output-dir "C:\email_dumps" --max-bytes 5120
+```
+
+Filter by received time:
+
+```powershell
+email-ingest export --output-dir "C:\email_dumps" --since "2026-02-01T00:00:00"
+```
+
 **Database and Storage**
 - SQLite is the default for local development.
 - Attachments and inline images are stored in content-addressed storage by `sha256`.

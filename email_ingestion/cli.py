@@ -9,6 +9,7 @@ from email_ingestion.config import load_config, AppConfig
 from email_ingestion.pipeline.orchestrator import run_ingestion
 from email_ingestion.util.logging import configure_logging
 from email_ingestion.util.time import parse_datetime
+from email_ingestion.output.text_dump import dump_email_texts
 
 
 def _build_config(base: AppConfig, args: argparse.Namespace) -> AppConfig:
@@ -35,6 +36,14 @@ def main() -> None:
     run_parser.add_argument("--storage-root", help="Storage root override")
     run_parser.add_argument("--log-level", help="Log level override")
     run_parser.add_argument("--poll-seconds", type=int, help="Poll interval in seconds")
+
+    export_parser = subparsers.add_parser("export", help="Export text dumps")
+    export_parser.add_argument("--output-dir", required=True, help="Directory for output text files")
+    export_parser.add_argument("--max-bytes", type=int, default=5120, help="Approx max bytes per file")
+    export_parser.add_argument("--since", help="Only export emails received after this datetime (ISO)")
+    export_parser.add_argument("--limit", type=int, help="Max emails to export")
+    export_parser.add_argument("--db-url", help="Database URL override")
+    export_parser.add_argument("--log-level", help="Log level override")
 
     args = parser.parse_args()
     config = _build_config(load_config(), args)
@@ -64,6 +73,17 @@ def main() -> None:
                 limit=args.limit,
                 use_checkpoint=args.since_checkpoint,
             )
+    elif args.command == "export":
+        config = _build_config(config, args)
+        configure_logging(config.log_level, config.log_file)
+        since_dt = parse_datetime(args.since)
+        dump_email_texts(
+            db_url=config.db_url,
+            output_dir=args.output_dir,
+            max_bytes=args.max_bytes,
+            limit=args.limit,
+            since=since_dt,
+        )
 
 
 if __name__ == "__main__":
